@@ -2,38 +2,51 @@ using UnityEngine;
 
 public class BreakableVase : MonoBehaviour
 {
-    [Header("Vazo Objeleri")]
-    public GameObject intactVase;
+    [Header("Vazo Nesneleri")]
+    public GameObject normalVase;
     public GameObject brokenVase;
+    public GameObject hiddenItem; // içindeki anahtar vs.
 
-    [Header("Anahtar")]
-    public GameObject keyObject;
+    [Header("Gerekli Item Adı")]
+    public string requiredItemName = "Hammer";
 
     private bool isBroken = false;
 
-    public void Break()
+    // Hammer seçili mi kontrol et – ItemPickupSystem buradan çağırıyor
+    public bool TryBreak(PickupItem selectedItem)
     {
-        if (isBroken) return;
-        isBroken = true;
+        if (isBroken)
+            return false;
 
-        Debug.Log("Vazo kırıldı!");
-
-        // 1) Sağlam vazoyu gizle
-        intactVase.SetActive(false);
-
-        // 2) Kırık vazo hazır pozisyonda aktifleştir
-        brokenVase.SetActive(true);
-
-        // 3) Kırık parçaları yere düşür
-        Rigidbody[] parts = brokenVase.GetComponentsInChildren<Rigidbody>();
-        foreach (var rb in parts)
+        if (selectedItem == null)
         {
-            rb.isKinematic = false;   // Fizik aktif
-            rb.useGravity  = true;
+            Debug.Log("Hiç item seçili değil.");
+            return false;
         }
 
-        // 4) Anahtarı aktif et
-        if (keyObject != null)
-            keyObject.SetActive(true);
+        if (selectedItem.itemName != requiredItemName)
+        {
+            Debug.Log("Bu vazo sadece Hammer ile kırılabilir!");
+            return false;
+        }
+
+        BreakVase();
+        return true;
+    }
+
+    void BreakVase()
+    {
+        isBroken = true;
+
+        if (normalVase != null)
+            normalVase.SetActive(false);
+
+        if (brokenVase != null)
+            brokenVase.SetActive(true);
+
+        if (hiddenItem != null)
+            hiddenItem.SetActive(true);
+
+        Debug.Log("Vazo kırıldı!");
     }
 }

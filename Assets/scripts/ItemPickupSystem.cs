@@ -2,76 +2,88 @@ using UnityEngine;
 
 public class ItemPickupSystem : MonoBehaviour
 {
-    [Header("Ayarlar")]
+    [Header("Etkileşim Mesafesi")]
     public float interactRange = 3f;
+
+    [Header("Envanter Referansı")]
     public InventoryUI inventory;
 
     void Update()
     {
-        // E → kapı veya kapak açma
+        // E → Kapı / Dolap
         if (Input.GetKeyDown(KeyCode.E))
-        {
-            TryDoorInteract();
-        }
+            TryInteractDoor();
 
-        // F → item alma veya vazo kırma
+        // F → Item alma + Vazo kırma
         if (Input.GetKeyDown(KeyCode.F))
-        {
-            TryPickupOrBreak();
-        }
+            TryInteractF();
     }
 
-    // -----------------------------------------------------------
-    // E TUŞU: KAPI / KAPAK AÇMA
-    // -----------------------------------------------------------
-    void TryDoorInteract()
+    // ---------------------------------------------------------
+    // F tuşu → önce Vazo kırmayı kontrol eder, sonra item alır
+    // ---------------------------------------------------------
+    void TryInteractF()
     {
-        Ray ray = Camera.main.ScreenPointToRay(
-            new Vector3(Screen.width / 2, Screen.height / 2, 0));
+        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f));
 
         if (!Physics.Raycast(ray, out RaycastHit hit, interactRange))
             return;
 
-        // Kapı scripti
-        DoorInteract door = hit.collider.GetComponentInParent<DoorInteract>();
-        if (door != null)
-        {
-            door.Toggle();
-            return;
-        }
+        // -----------------------------------------------------
+        // 1) VAZO KIRMA KONTROLÜ (ÖNCELİK)
+        // -----------------------------------------------------
+        BreakableVase vase = hit.collider.GetComponent<BreakableVase>();
+        if (vase == null)
+            vase = hit.collider.GetComponentInParent<BreakableVase>();
 
-        // Eğer dolap kapağı için ayrı script varsa, aynısını ekleyebilirsin:
-        // CabinetDoor cabinet = hit.collider.GetComponentInParent<CabinetDoor>();
-        // if (cabinet != null) { cabinet.Toggle(); return; }
-    }
-
-    // -----------------------------------------------------------
-    // F TUŞU: ITEM ALMA VE VAZO KIRMA
-    // -----------------------------------------------------------
-    void TryPickupOrBreak()
-    {
-        Ray ray = Camera.main.ScreenPointToRay(
-            new Vector3(Screen.width / 2, Screen.height / 2, 0));
-
-        if (!Physics.Raycast(ray, out RaycastHit hit, interactRange))
-            return;
-
-        // 1) Kırılabilir vazo
-        BreakableVase vase = hit.collider.GetComponentInParent<BreakableVase>();
         if (vase != null)
         {
-            vase.Break();
-            return;
+            PickupItem heldItem = inventory.GetSelectedItem();
+
+            // Hammer seçili değilse kırmaz
+            if (vase.TryBreak(heldItem))
+                return;
+
+            return; // Hammer yok → item alma kısmına geçilmez
         }
 
-        // 2) Normal item alma
+        // -----------------------------------------------------
+        // 2) ITEM ALMA
+        // -----------------------------------------------------
+        TryPickupItem(hit);
+    }
+
+    // ---------------------------------------------------------
+    // ITEM ALMA
+    // ---------------------------------------------------------
+    void TryPickupItem(RaycastHit hit)
+    {
         PickupItem item = hit.collider.GetComponent<PickupItem>();
-        if (item != null)
-        {
-            if (inventory != null)
-                inventory.AddItem(item.icon);
 
-            Destroy(item.gameObject);
-        }
+        if (item == null)
+            item = hit.collider.GetComponentInParent<PickupItem>();
+
+        if (item == null)
+            return;
+
+        inventory.AddItem(item);
+    }
+
+    // ---------------------------------------------------------
+    // E tuşu → Kapı veya dolap açma / kapama
+    // ---------------------------------------------------------
+    void TryInteractDoor()
+    {
+        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f));
+
+        if (!Physics.Raycast(ray, out RaycastHit hit, interactRange))
+            return;
+
+        DoorInteract door = hit.collider.GetComponent<DoorInteract>();
+        if (door == null)
+            door = hit.collider.GetComponentInParent<DoorInteract>();
+
+        if (door != null)
+            door.Toggle();
     }
 }

@@ -3,53 +3,88 @@ using UnityEngine.UI;
 
 public class InventoryUI : MonoBehaviour
 {
-    public Image[] slots;  // slotların arka plan Image component'i
-    public Image[] icons;  // slot içindeki itemicon Image component'leri
+    [Header("Slot Arka Planları")]
+    public Image[] slotImages;
 
-    [Header("Seçili Slot Görünümü")]
-    public Color normalColor = Color.white;
+    [Header("Slot İkonları")]
+    public Image[] slotIcons;
+
+    [Header("Renk Ayarları")]
+    public Color normalColor = Color.gray;
     public Color selectedColor = Color.yellow;
 
-    public int SelectedIndex { get; private set; } = -1;
+    private PickupItem[] inventory = new PickupItem[6];
+    private int selectedIndex = -1;
 
-    public void AddItem(Sprite sprite)
+    void Start()
     {
-        for (int i = 0; i < icons.Length; i++)
-        {
-            // Boş slot: icon henüz aktif değilse
-            if (!icons[i].enabled)
-            {
-                icons[i].sprite = sprite;
-                icons[i].enabled = true;
-
-                // İlk item geldiyse otomatik o slota geç
-                if (SelectedIndex == -1)
-                {
-                    SelectSlot(i);
-                }
-
-                return;
-            }
-        }
-
-        Debug.Log("Envanter dolu!");
+        RefreshUI();
     }
 
-    public void SelectSlot(int index)
+    public void SetSelectedIndex(int newIndex)
     {
-        if (index < 0 || index >= slots.Length)
+        if (newIndex < 0 || newIndex >= inventory.Length)
             return;
 
-        // Önce eski seçili slotun rengini sıfırla
-        if (SelectedIndex >= 0 && SelectedIndex < slots.Length)
+        selectedIndex = newIndex;
+        RefreshUI();
+    }
+
+    public void AddItem(PickupItem item)
+    {
+        int index = item.worldIndex;
+
+        if (index < 0 || index >= inventory.Length)
+            return;
+
+        inventory[index] = item;
+        item.gameObject.SetActive(false);
+        item.DisablePhysics();
+
+        RefreshUI();
+    }
+
+    public void DropSelectedItem()
+    {
+        if (selectedIndex == -1) return;
+        if (inventory[selectedIndex] == null) return;
+
+        PickupItem item = inventory[selectedIndex];
+        inventory[selectedIndex] = null;
+
+        item.transform.position = Camera.main.transform.position + Camera.main.transform.forward * 1.5f;
+        item.transform.rotation = Quaternion.identity;
+
+        item.gameObject.SetActive(true);
+        item.EnablePhysics();
+
+        RefreshUI();
+    }
+
+    public PickupItem GetSelectedItem()
+    {
+        if (selectedIndex < 0) return null;
+        return inventory[selectedIndex];
+    }
+
+    void RefreshUI()
+    {
+        for (int i = 0; i < slotImages.Length; i++)
         {
-            slots[SelectedIndex].color = normalColor;
+            slotImages[i].color = (i == selectedIndex) ? selectedColor : normalColor;
+
+            if (slotIcons != null && i < slotIcons.Length)
+            {
+                if (inventory[i] == null)
+                {
+                    slotIcons[i].enabled = false;
+                }
+                else
+                {
+                    slotIcons[i].enabled = true;
+                    slotIcons[i].sprite = inventory[i].icon;  // 🔥 PNG ikon HUD’a basılıyor
+                }
+            }
         }
-
-        // Yeni slotu işaretle
-        slots[index].color = selectedColor;
-        SelectedIndex = index;
-
-        Debug.Log("Slot seçildi: " + (index + 1));
     }
 }

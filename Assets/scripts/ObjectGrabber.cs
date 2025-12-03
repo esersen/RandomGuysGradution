@@ -1,60 +1,79 @@
 using UnityEngine;
 
-public class GrabObject : MonoBehaviour
+public class ObjectGrabber : MonoBehaviour
 {
+    [Header("Ayarlar")]
+    public float grabRange = 3f;
     public float holdDistance = 2f;
-    public float smooth = 10f;
+    public float moveSpeed = 10f;
 
-    private Transform playerCam;
-    private Rigidbody currentObj;
-    private bool holding = false;
+    private Rigidbody heldRb;
+    private Transform cam;
+
+    int grabbableMask;
 
     void Start()
     {
-        playerCam = Camera.main.transform;
+        cam = Camera.main.transform;
+        grabbableMask = LayerMask.GetMask("Grabbable");
     }
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.E))
         {
-            if (!holding)
+            if (heldRb == null)
                 TryGrab();
             else
                 Drop();
         }
 
-        if (holding && currentObj != null)
-        {
-            Vector3 targetPos = playerCam.position + playerCam.forward * holdDistance;
-            currentObj.MovePosition(Vector3.Lerp(currentObj.position, targetPos, Time.deltaTime * smooth));
-        }
+        if (heldRb != null)
+            HoldObject();
     }
 
     void TryGrab()
     {
-        Ray ray = new Ray(playerCam.position, playerCam.forward);
-        if (Physics.Raycast(ray, out RaycastHit hit, 3f))
+        Ray ray = new Ray(cam.position, cam.forward);
+
+        if (!Physics.Raycast(ray, out RaycastHit hit, grabRange, grabbableMask))
+            return;
+
+        // Envanterdeki itemleri grablama
+        PickupItem item = hit.collider.GetComponentInParent<PickupItem>();
+        if (item != null && !item.gameObject.activeInHierarchy)
+            return;
+
+        heldRb = hit.collider.attachedRigidbody;
+
+        if (heldRb != null)
         {
-            Rigidbody rb = hit.collider.GetComponent<Rigidbody>();
-            if (rb != null)
-            {
-                currentObj = rb;
-                currentObj.useGravity = false;
-                currentObj.freezeRotation = true;
-                holding = true;
-            }
+            heldRb.useGravity = false;
+            heldRb.linearDamping = 10f;
         }
+    }
+
+    void HoldObject()
+    {
+        Vector3 targetPos = cam.position + cam.forward * holdDistance;
+        Vector3 direction = targetPos - heldRb.position;
+
+        heldRb.linearVelocity = direction * moveSpeed;
+
+        // 🔥 BURASI EKLENDİ: DÖNMEYİ ENGELLER
+        heldRb.angularVelocity = Vector3.zero;
+        heldRb.rotation = Quaternion.identity;
     }
 
     void Drop()
     {
-        if (currentObj != null)
+        if (heldRb != null)
         {
-            currentObj.useGravity = true;
-            currentObj.freezeRotation = false;
-            currentObj = null;
+            heldRb.useGravity = true;
+            heldRb.linearDamping = 0f;
+            heldRb.angularVelocity = Vector3.zero;
+
+            heldRb = null;
         }
-        holding = false;
     }
 }
