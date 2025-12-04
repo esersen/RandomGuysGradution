@@ -1098,7 +1098,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7717116106030271184}
   - component: {fileID: 9062362240430156777}
-  - component: {fileID: 6365583000758185491}
   - component: {fileID: 3316485090831957076}
   - component: {fileID: 4439811367246103868}
   - component: {fileID: 5495042564828433817}
@@ -1142,36 +1141,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8039358679142360694}
   m_CullTransparentMesh: 1
---- !u!114 &6365583000758185491
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8039358679142360694}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
 --- !u!114 &3316485090831957076
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1208,22 +1177,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e01ef0a5275ce7e44a9f26009dc203bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventoryUI
-  slots:
-  - {fileID: 522549691243431498}
-  - {fileID: 3264053216691145032}
-  - {fileID: 4698044503932876202}
-  - {fileID: 1853185800586552909}
-  - {fileID: 6720706351176505607}
-  - {fileID: 6585656615603944238}
-  icons:
-  - {fileID: 7596844700953921643}
-  - {fileID: 7279959462576826845}
-  - {fileID: 9124291320008383154}
-  - {fileID: 1679445368620294706}
-  - {fileID: 6136571706221472711}
-  - {fileID: 4310978774318634969}
+  slotImages: []
+  slotIcons: []
   normalColor: {r: 0.13725491, g: 0.13725491, b: 0.13725491, a: 1}
   selectedColor: {r: 0.6226415, g: 0.6226415, b: 0.6226415, a: 1}
+  heldItemPoint: {fileID: 0}
 --- !u!114 &5495042564828433817
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1236,6 +1194,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d775e29f51153f46a8b24ecfbe87340, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventoryHotbarInput
+  inventory: {fileID: 0}
+  dropPoint: {fileID: 0}
 --- !u!1 &8926804380222849023
 GameObject:
   m_ObjectHideFlags: 0

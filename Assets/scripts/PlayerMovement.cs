@@ -16,41 +16,44 @@ public class FpsController : MonoBehaviour
     private float yVelocity;
     private float xRotation = 0f;
 
+    // 🔥 EKLENDİ — kamera dönmesini kapatmak için:
+    [HideInInspector] public bool cameraFreeze = false;
+
     void Start()
     {
         controller = GetComponent<CharacterController>();
 
-        // Mouse'u ekrana kilitle
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
     void Update()
     {
-        // === MOUSE İLE ETRAFINA BAKMA ===
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        // === MOUSE KONTROLÜ ===
+        if (!cameraFreeze) // 🔥 Sağ tıkla rotate modundayken kamera kilitlenecek
+        {
+            float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+            float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
-        // Yatay dönme (sağa sola) - karakteri döndürür
-        transform.Rotate(Vector3.up * mouseX);
+            transform.Rotate(Vector3.up * mouseX);
 
-        // Dikey dönme (yukarı aşağı) - sadece kamerayı döndürür
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -80f, 80f); // Yukarı-aşağı bakma sınırı
-        cam.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+            xRotation -= mouseY;
+            xRotation = Mathf.Clamp(xRotation, -80f, 80f);
+            cam.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        }
 
-        // === KLAVYE İLE YÜRÜME (WASD) ===
-        float h = Input.GetAxisRaw("Horizontal"); // A-D
-        float v = Input.GetAxisRaw("Vertical");   // W-S
+        // === KLAVYE İLE HAREKET ===
+        float h = Input.GetAxisRaw("Horizontal");
+        float v = Input.GetAxisRaw("Vertical");
 
         Vector3 move = transform.right * h + transform.forward * v;
         move = move.normalized * moveSpeed;
 
-        // === YER ÇEKİMİ + ZIPLAMA ===
+        // Yer çekimi + zıplama
         if (controller.isGrounded)
         {
-            yVelocity = -1f; // Yere yapışık tutsun
-            if (Input.GetButtonDown("Jump")) // Space
+            yVelocity = -1f;
+            if (Input.GetButtonDown("Jump"))
             {
                 yVelocity = Mathf.Sqrt(jumpForce * -2f * gravity);
             }
@@ -61,7 +64,6 @@ public class FpsController : MonoBehaviour
         }
 
         move.y = yVelocity;
-
         controller.Move(move * Time.deltaTime);
     }
 }

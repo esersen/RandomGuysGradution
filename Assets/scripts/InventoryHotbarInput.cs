@@ -12,16 +12,19 @@ public class InventoryHotbarInput : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Q))
         {
             inventory.DropSelectedItem();
+            inventory.UpdateHeldItem(); // item atınca elindeki temizlensin
         }
     }
 
     void HandleHotbarKeys()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1)) inventory.SetSelectedIndex(0);
-        if (Input.GetKeyDown(KeyCode.Alpha2)) inventory.SetSelectedIndex(1);
-        if (Input.GetKeyDown(KeyCode.Alpha3)) inventory.SetSelectedIndex(2);
-        if (Input.GetKeyDown(KeyCode.Alpha4)) inventory.SetSelectedIndex(3);
-        if (Input.GetKeyDown(KeyCode.Alpha5)) inventory.SetSelectedIndex(4);
-        if (Input.GetKeyDown(KeyCode.Alpha6)) inventory.SetSelectedIndex(5);
+        for (int i = 0; i < 6; i++)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1 + i))
+            {
+                inventory.SetSelectedIndex(i);
+                inventory.UpdateHeldItem(); // elindeki item güncelle
+            }
+        }
     }
 }
