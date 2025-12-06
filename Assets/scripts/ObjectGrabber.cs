@@ -17,11 +17,12 @@ public class ObjectGrabber : MonoBehaviour
     // Döndürme
     private bool rotating = false;
     private Vector3 lastMouse;
-    private Vector3 currentMouseDelta; 
+    private Vector3 currentMouseDelta;
 
     private float rotateSpeed = 10f; // Rotasyon hızı
-    private float rotationFollowSpeed = 20f; // Rotasyon yumuşatma hızı (Yeni)
-    private float followFactor = 0.75f; 
+    private float rotationFollowSpeed = 20f; // Rotasyon yumuşatma hızı
+
+    // followFactor satırı buradan silindi çünkü kullanılmıyordu.
 
     void Start()
     {
@@ -39,7 +40,7 @@ public class ObjectGrabber : MonoBehaviour
             Vector3 delta = Input.mousePosition - lastMouse;
             currentMouseDelta += delta;
             lastMouse = Input.mousePosition;
-        } 
+        }
         else
         {
             currentMouseDelta = Vector3.zero;
@@ -53,7 +54,7 @@ public class ObjectGrabber : MonoBehaviour
             if (!rotating)
             {
                 MoveHeldObject();
-                heldRb.angularVelocity = Vector3.zero; 
+                heldRb.angularVelocity = Vector3.zero;
             }
             else
             {
@@ -76,7 +77,6 @@ public class ObjectGrabber : MonoBehaviour
         }
     }
 
-    // 🔥 DEĞİŞİKLİK: Grab Damping'i daha yumuşak ama kontrol edilebilir bir değere (5f) geri getirdik.
     void TryGrab()
     {
         Ray ray = new Ray(cam.position, cam.forward);
@@ -92,20 +92,18 @@ public class ObjectGrabber : MonoBehaviour
             heldRb = rb;
             heldRb.isKinematic = false;
             heldRb.useGravity = false;
-            
-            // Damping değerleri geri ayarlandı.
-            heldRb.linearDamping = 5f; 
-            heldRb.angularDamping = 5f; 
+
+            heldRb.linearDamping = 5f;
+            heldRb.angularDamping = 5f;
         }
     }
 
-    // 🔥 DEĞİŞİKLİK: Drop Damping değerleri geri ayarlandı.
     void Drop()
     {
         if (heldRb == null) return;
 
         heldRb.useGravity = true;
-        heldRb.linearDamping = 0.05f; 
+        heldRb.linearDamping = 0.05f;
         heldRb.angularDamping = 0.05f;
 
         rotating = false;
@@ -117,9 +115,9 @@ public class ObjectGrabber : MonoBehaviour
     void MoveHeldObject()
     {
         Vector3 targetPos = cam.position + cam.forward * holdDistance;
-        
+
         Vector3 displacement = targetPos - heldRb.position;
-        
+
         Vector3 velocity = displacement / Time.fixedDeltaTime;
 
         heldRb.linearVelocity = velocity;
@@ -132,7 +130,7 @@ public class ObjectGrabber : MonoBehaviour
         if (Input.GetMouseButtonDown(1))
         {
             rotating = true;
-            lastMouse = Input.mousePosition; 
+            lastMouse = Input.mousePosition;
             currentMouseDelta = Vector3.zero;
 
             if (fps != null)
@@ -148,10 +146,9 @@ public class ObjectGrabber : MonoBehaviour
         }
     }
 
-    // 🔥 DÜZELTME: Yumuşak Slerp takibine geri döndük, Transform set'i kaldırdık.
     void RotateHeldObject()
     {
-        if (currentMouseDelta.magnitude > 0) 
+        if (currentMouseDelta.magnitude > 0)
         {
             // Rotasyon miktarını hesapla
             Quaternion rotY = Quaternion.AngleAxis(currentMouseDelta.x * rotateSpeed, cam.up);
@@ -164,13 +161,9 @@ public class ObjectGrabber : MonoBehaviour
                 Quaternion.Slerp(
                     heldRb.rotation,
                     desiredRotation,
-                    Time.fixedDeltaTime * rotationFollowSpeed // Sabit bir takip hızı
+                    Time.fixedDeltaTime * rotationFollowSpeed
                 )
             );
-            
-            // Mouse deltasını koru, çünkü Slerp her FixedUpdate'te mevcut deltaya yetişemeyebilir.
-            // Bu, rotasyonun daha sürekli olmasını sağlar.
-            // currentMouseDelta = Vector3.zero; // Bu satırı kaldırdık
         }
     }
 }
