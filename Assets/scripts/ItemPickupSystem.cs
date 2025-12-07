@@ -3,87 +3,75 @@ using UnityEngine;
 public class ItemPickupSystem : MonoBehaviour
 {
     [Header("Etkileşim Mesafesi")]
-    public float interactRange = 3f;
+    public float interactRange = 5f; // Menzili 5 yaptık ki rahat yetişsin
 
     [Header("Envanter Referansı")]
     public InventoryUI inventory;
 
     void Update()
     {
-        // E → Kapı / Dolap
+        // E Tuşu: Kapılar (Normal ve Bölüm Sonu)
         if (Input.GetKeyDown(KeyCode.E))
-            TryInteractDoor();
+            TryInteractE();
 
-        // F → Item alma + Vazo kırma
+        // F Tuşu: Eşya Alma ve Vazo Kırma
         if (Input.GetKeyDown(KeyCode.F))
             TryInteractF();
     }
 
-    // ---------------------------------------------------------
-    // F tuşu → önce Vazo kırmayı kontrol eder, sonra item alır
-    // ---------------------------------------------------------
+    void TryInteractE()
+    {
+        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f));
+        if (Physics.Raycast(ray, out RaycastHit hit, interactRange))
+        {
+            // 1. ÖNCE ÇIKIŞ KAPISINA BAK (LevelExitDoor)
+            LevelExitDoor exitDoor = hit.collider.GetComponent<LevelExitDoor>();
+            if (exitDoor == null) exitDoor = hit.collider.GetComponentInParent<LevelExitDoor>();
+
+            if (exitDoor != null)
+            {
+                // Çıkış kapısıysa anahtarı dene
+                PickupItem heldItem = inventory.GetSelectedItem();
+                exitDoor.TryOpenDoor(heldItem);
+                return; // Başka şeye bakma
+            }
+
+            // 2. NORMAL KAPIYA BAK (DoorInteract)
+            DoorInteract door = hit.collider.GetComponent<DoorInteract>();
+            if (door == null) door = hit.collider.GetComponentInParent<DoorInteract>();
+
+            if (door != null)
+            {
+                // Normal kapıysa aç/kapat
+                door.Toggle();
+            }
+        }
+    }
+
     void TryInteractF()
     {
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f));
-
-        if (!Physics.Raycast(ray, out RaycastHit hit, interactRange))
-            return;
-
-        // -----------------------------------------------------
-        // 1) VAZO KIRMA KONTROLÜ (ÖNCELİK)
-        // -----------------------------------------------------
-        BreakableVase vase = hit.collider.GetComponent<BreakableVase>();
-        if (vase == null)
-            vase = hit.collider.GetComponentInParent<BreakableVase>();
-
-        if (vase != null)
+        if (Physics.Raycast(ray, out RaycastHit hit, interactRange))
         {
-            PickupItem heldItem = inventory.GetSelectedItem();
+            // 1. VAZO KIRMA
+            BreakableVase vase = hit.collider.GetComponent<BreakableVase>();
+            if (vase == null) vase = hit.collider.GetComponentInParent<BreakableVase>();
 
-            // Hammer seçili değilse kırmaz
-            if (vase.TryBreak(heldItem))
+            if (vase != null)
+            {
+                PickupItem heldItem = inventory.GetSelectedItem();
+                vase.TryBreak(heldItem);
                 return;
+            }
 
-            return; // Hammer yok → item alma kısmına geçilmez
+            // 2. EŞYA TOPLAMA
+            PickupItem item = hit.collider.GetComponent<PickupItem>();
+            if (item == null) item = hit.collider.GetComponentInParent<PickupItem>();
+
+            if (item != null)
+            {
+                inventory.AddItem(item);
+            }
         }
-
-        // -----------------------------------------------------
-        // 2) ITEM ALMA
-        // -----------------------------------------------------
-        TryPickupItem(hit);
-    }
-
-    // ---------------------------------------------------------
-    // ITEM ALMA
-    // ---------------------------------------------------------
-    void TryPickupItem(RaycastHit hit)
-    {
-        PickupItem item = hit.collider.GetComponent<PickupItem>();
-
-        if (item == null)
-            item = hit.collider.GetComponentInParent<PickupItem>();
-
-        if (item == null)
-            return;
-
-        inventory.AddItem(item);
-    }
-
-    // ---------------------------------------------------------
-    // E tuşu → Kapı veya dolap açma / kapama
-    // ---------------------------------------------------------
-    void TryInteractDoor()
-    {
-        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f));
-
-        if (!Physics.Raycast(ray, out RaycastHit hit, interactRange))
-            return;
-
-        DoorInteract door = hit.collider.GetComponent<DoorInteract>();
-        if (door == null)
-            door = hit.collider.GetComponentInParent<DoorInteract>();
-
-        if (door != null)
-            door.Toggle();
     }
 }

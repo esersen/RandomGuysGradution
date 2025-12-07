@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events; // <-- Bu kütüphane şart!
 using TMPro;
 
 public class JournalSystem : MonoBehaviour
@@ -14,22 +15,26 @@ public class JournalSystem : MonoBehaviour
     public GameObject contentPanel;
 
     [Header("Çarklı Kilit Sistemi")]
-    // 4 tane sayının Text'ini buraya bağlayacağız
     public TextMeshProUGUI[] digitTexts;
-
-    // O anki şifre durumu
     private int[] currentDigits = { 0, 0, 0, 0 };
 
     [Header("İçerik UI")]
     public Image pageImageDisplay;
     public Button nextButton;
     public Button prevButton;
-    public TextMeshProUGUI errorText; // Hata mesajı için (Opsiyonel)
+    public TextMeshProUGUI errorText;
+
+    [Header("Olaylar (Events)")]
+    // Şifre doğru girildiğinde ne olsun? (Inspector'dan seçeceğiz)
+    public UnityEvent onPasswordCorrect;
 
     public bool isUiOpen = false;
 
     private PickupItem currentJournalItem;
     private int currentPageIndex = 0;
+
+    // Şifre daha önce çözüldü mü kontrolü (Tekrar tekrar çalışmasın)
+    private bool isSolved = false;
 
     void Start()
     {
@@ -38,14 +43,12 @@ public class JournalSystem : MonoBehaviour
 
     void Update()
     {
-        // R tuşu
         if (Input.GetKeyDown(KeyCode.R))
         {
             if (isUiOpen) CloseJournal();
             else TryOpenJournal();
         }
 
-        // ESC tuşu
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             if (isUiOpen) CloseJournal();
@@ -74,8 +77,6 @@ public class JournalSystem : MonoBehaviour
         {
             if (passwordPanel != null) passwordPanel.SetActive(true);
             if (contentPanel != null) contentPanel.SetActive(false);
-
-            // Şifre ekranını sıfırla
             ResetLock();
             if (errorText) errorText.text = "";
         }
@@ -98,22 +99,16 @@ public class JournalSystem : MonoBehaviour
         Cursor.visible = false;
     }
 
-    // --- KİLİT MEKANİĞİ ---
-
     void ResetLock()
     {
         currentDigits = new int[] { 0, 0, 0, 0 };
         UpdateDigitDisplay();
     }
 
-    // Butonlara tıklayınca sadece sayıyı değiştirir, kontrol ETMEZ.
     public void ChangeDigit(int digitIndex)
     {
         currentDigits[digitIndex]++;
-
-        if (currentDigits[digitIndex] > 9)
-            currentDigits[digitIndex] = 0;
-
+        if (currentDigits[digitIndex] > 9) currentDigits[digitIndex] = 0;
         UpdateDigitDisplay();
     }
 
@@ -121,38 +116,40 @@ public class JournalSystem : MonoBehaviour
     {
         for (int i = 0; i < digitTexts.Length; i++)
         {
-            if (digitTexts[i] != null)
-                digitTexts[i].text = currentDigits[i].ToString();
+            if (digitTexts[i] != null) digitTexts[i].text = currentDigits[i].ToString();
         }
     }
 
-    // --- YENİ: ONANYLA BUTONU İÇİN FONKSİYON ---
     public void ConfirmPassword()
     {
         if (currentJournalItem == null) return;
 
-        // Sayı dizisini String'e çevir
         string currentCodeString = "";
-        foreach (int d in currentDigits)
-        {
-            currentCodeString += d.ToString();
-        }
+        foreach (int d in currentDigits) currentCodeString += d.ToString();
 
-        // Doğru mu?
         if (currentCodeString == currentJournalItem.journalPassword)
         {
+            // Şifre DOĞRU
             currentJournalItem.isLocked = false;
+
+            // --- OLAY TETİKLEME ---
+            // Eğer daha önce çözülmediyse Olayı çalıştır (Kapı aç, ses çal vs.)
+            if (!isSolved)
+            {
+                isSolved = true;
+                onPasswordCorrect.Invoke();
+                Debug.Log("Şifre doğru! Gizli bölme açılıyor...");
+            }
+            // ----------------------
+
             ShowContent();
         }
         else
         {
-            // Yanlışsa
             if (errorText != null) errorText.text = "Hatalı Şifre!";
-            Debug.Log("Girilen şifre yanlış: " + currentCodeString);
         }
     }
 
-    // --- SAYFA SİSTEMİ ---
     void ShowContent()
     {
         if (passwordPanel != null) passwordPanel.SetActive(false);
@@ -163,7 +160,6 @@ public class JournalSystem : MonoBehaviour
     void UpdatePageImage()
     {
         if (currentJournalItem.journalPages == null || currentJournalItem.journalPages.Length == 0) return;
-
         pageImageDisplay.sprite = currentJournalItem.journalPages[currentPageIndex];
 
         if (prevButton != null) prevButton.gameObject.SetActive(currentPageIndex > 0);

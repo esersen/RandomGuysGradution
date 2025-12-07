@@ -9,14 +9,14 @@ public class FpsController : MonoBehaviour
     public float jumpForce = 3f;
 
     [Header("Mouse Ayarları")]
-    public float mouseSensitivity = 100f;
+    // Time.deltaTime'ı sildiğimiz için bu değeri düşürmen lazım! (Örn: 2 yap)
+    public float mouseSensitivity = 2f;
     public Transform cam;   // Kamerayı buraya sürükle
 
     private CharacterController controller;
     private float yVelocity;
     private float xRotation = 0f;
 
-    // 🔥 EKLENDİ — kamera dönmesini kapatmak için:
     [HideInInspector] public bool cameraFreeze = false;
 
     void Start()
@@ -29,11 +29,12 @@ public class FpsController : MonoBehaviour
 
     void Update()
     {
-        // === MOUSE KONTROLÜ ===
-        if (!cameraFreeze) // 🔥 Sağ tıkla rotate modundayken kamera kilitlenecek
+        // === MOUSE KONTROLÜ (DÜZELTİLDİ) ===
+        if (!cameraFreeze)
         {
-            float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-            float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+            // Time.deltaTime KALDIRILDI. Artık yağ gibi akacak.
+            float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+            float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
             transform.Rotate(Vector3.up * mouseX);
 
@@ -49,7 +50,6 @@ public class FpsController : MonoBehaviour
         Vector3 move = transform.right * h + transform.forward * v;
         move = move.normalized * moveSpeed;
 
-        // Yer çekimi + zıplama
         if (controller.isGrounded)
         {
             yVelocity = -1f;

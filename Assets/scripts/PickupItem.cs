@@ -7,22 +7,19 @@ public class PickupItem : MonoBehaviour
     public int worldIndex;
 
     [Header("HUD İkonu")]
-    public Sprite icon;                  // Envanter slotunda görünen ikon
+    public Sprite icon;
 
     [Header("Elde Tutma Ayarları")]
-    public GameObject heldPrefab;        // Elde gösterilecek model
+    public GameObject heldPrefab;
     public Vector3 heldPositionOffset;
     public Vector3 heldRotationOffset;
 
-    // --- GÜNLÜK ÖZELLİKLERİ (GÜNCELLENDİ) ---
     [Header("Günlük / Şifre Sistemi")]
-    public bool isJournal = false;          // Bu eşya bir günlük mü?
-    public string journalPassword = "1234"; // Şifresi ne?
-    public bool isLocked = true;            // Kilitli mi?
+    public bool isJournal = false;          // Bu eşya bir günlük mü? (Mektup için de bunu seç)
+    public string journalPassword = "";     // Şifresi ne? (Mektup için boş bırak)
+    public bool isLocked = false;           // Kilitli mi? (Mektup için False yap)
 
-    // YENİ: Artık tek bir yazı değil, resim sayfaları var
-    public Sprite[] journalPages;
-    // ---------------------------------------
+    public Sprite[] journalPages;           // Sayfa resimleri buraya
 
     [HideInInspector] public Rigidbody rb;
     [HideInInspector] public Collider col;
